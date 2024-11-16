@@ -31,9 +31,22 @@ export function ChatMessage({ role, content, results }: ChatMessageProps) {
                     href={result.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium hover:underline"
+                    className="flex items-center gap-2 font-medium hover:underline group"
                   >
-                    {result.subject}
+                    <span>{result.subject}</span>
+                    <svg 
+                      className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                      />
+                    </svg>
                   </a>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {result.similarity}

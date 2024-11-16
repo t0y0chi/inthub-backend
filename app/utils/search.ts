@@ -3,11 +3,16 @@ import { createEmbedding } from './openai';
 import { EmailData } from '@/app/types/email';
 import { truncateText } from './text';
 
+type SearchResult = EmailData & {
+  similarity: number;
+  url: string;
+};
+
 export async function searchSimilarEmails(
   query: string,
   userId: string,
   limit: number = 5
-): Promise<Array<EmailData & { similarity: number }>> {
+): Promise<SearchResult[]> {
   try {
     const embedding = await createEmbedding(query);
 
@@ -24,6 +29,7 @@ export async function searchSimilarEmails(
     const processedEmails = emails.map(email => ({
       ...email,
       body: truncateText(email.body, 1000),
+      url: email.url || `https://mail.google.com/mail/u/0/#inbox/${email.id}`,
     }));
 
     return processedEmails.sort((a, b) => b.similarity - a.similarity);
