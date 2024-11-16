@@ -1,6 +1,7 @@
 import { supabase } from '@/app/lib/supabase';
 import { EmailMetadata } from '@/app/types/email';
 import { createEmbedding } from '@/app/utils/openai';
+import { createEmailContent } from '@/app/utils/text';
 
 export async function saveEmails(emails: EmailMetadata[], userId: string) {
   try {
@@ -35,8 +36,10 @@ export async function saveEmails(emails: EmailMetadata[], userId: string) {
     for (const batch of batches) {
       const emailsWithEmbeddings = await Promise.all(
         batch.map(async (email) => {
-          const content = `Subject: ${email.subject}\n\nFrom: ${email.from}\n\nBody: ${email.body}`;
+          // メールコンテンツを作成（長さを制限）
+          const content = createEmailContent(email);
           const embedding = await createEmbedding(content);
+
           return {
             id: email.id,
             user_id: userId,

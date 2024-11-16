@@ -9,10 +9,13 @@ import Link from 'next/link';
 type Message = {
   role: 'user' | 'assistant';
   content: string;
-  sources?: Array<{
+  results?: Array<{
     subject: string;
+    from: string;
     date: string;
+    body: string;
     url: string;
+    similarity: string;
   }>;
 };
 
@@ -32,7 +35,6 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // TODO: APIエンドポイントの実装
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,8 +46,8 @@ export default function Home() {
       const data = await response.json();
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.message,
-        sources: data.sources,
+        content: `Found ${data.results.length} relevant emails:`,
+        results: data.results,
       }]);
     } catch (error) {
       console.error('Error:', error);
