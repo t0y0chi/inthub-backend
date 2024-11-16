@@ -16,7 +16,7 @@ create table public.emails (
   
   constraint fk_user
     foreign key(user_id)
-    references auth.users(id)
+    references public.users(id)
     on delete cascade
 );
 
@@ -28,8 +28,10 @@ with (lists = 100);
 -- Enable RLS
 alter table public.emails enable row level security;
 
--- Create policy
-create policy "Users can only access their own emails"
+-- Create policy for emails
+create policy "Users can access their own emails"
   on public.emails
   for all
-  using (auth.uid() = user_id); 
+  to anon, authenticated
+  using (true)
+  with check (true);

@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getGmailClient, getEmails } from '@/app/utils/gmail';
 import { saveEmails } from '@/app/utils/db';
 import { getToken } from 'next-auth/jwt';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { startDate, endDate } = await req.json();
     
@@ -14,15 +14,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = await getToken({ req: req as any });
-    if (!token?.sub) {
+    const token = await getToken({ req });
+    if (!token?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const gmail = await getGmailClient(req as any);
+    const gmail = await getGmailClient(req);
     
     const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
     const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
@@ -30,8 +30,8 @@ export async function POST(req: Request) {
     const query = `after:${startTimestamp} before:${endTimestamp}`;
     const emails = await getEmails(gmail, query);
 
-    // Save emails to Supabase
-    const { count } = await saveEmails(emails, token.sub);
+    // Save emails to Supabase with userId
+    const { count } = await saveEmails(emails, token.userId);
 
     return NextResponse.json({
       success: true,

@@ -1,8 +1,9 @@
 import { google } from 'googleapis';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
+import { GmailClient, GmailMessage } from '@/app/types/gmail';
 
-export async function getGmailClient(req: NextRequest) {
+export async function getGmailClient(req: NextRequest): Promise<GmailClient> {
   const token = await getToken({ req });
   
   if (!token?.accessToken) {
@@ -18,10 +19,10 @@ export async function getGmailClient(req: NextRequest) {
     access_token: token.accessToken as string,
   });
 
-  return google.gmail({ version: 'v1', auth: oauth2Client });
+  return google.gmail({ version: 'v1', auth: oauth2Client }) as unknown as GmailClient;
 }
 
-export async function getEmails(gmail: any, query: string = '') {
+export async function getEmails(gmail: GmailClient, query: string = '') {
   try {
     const response = await gmail.users.messages.list({
       userId: 'me',
@@ -31,7 +32,7 @@ export async function getEmails(gmail: any, query: string = '') {
 
     const messages = response.data.messages || [];
     const emails = await Promise.all(
-      messages.map(async (message: any) => {
+      messages.map(async (message) => {
         const email = await gmail.users.messages.get({
           userId: 'me',
           id: message.id,
@@ -39,16 +40,16 @@ export async function getEmails(gmail: any, query: string = '') {
         });
 
         const headers = email.data.payload.headers;
-        const subject = headers.find((h: any) => h.name === 'Subject')?.value || 'No Subject';
-        const from = headers.find((h: any) => h.name === 'From')?.value || '';
-        const date = headers.find((h: any) => h.name === 'Date')?.value || '';
+        const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
+        const from = headers.find(h => h.name === 'From')?.value || '';
+        const date = headers.find(h => h.name === 'Date')?.value || '';
 
         let body = '';
         if (email.data.payload.parts) {
           const textPart = email.data.payload.parts.find(
-            (part: any) => part.mimeType === 'text/plain'
+            part => part.mimeType === 'text/plain'
           );
-          if (textPart && textPart.body.data) {
+          if (textPart?.body.data) {
             body = Buffer.from(textPart.body.data, 'base64').toString();
           }
         } else if (email.data.payload.body.data) {
@@ -57,7 +58,7 @@ export async function getEmails(gmail: any, query: string = '') {
 
         return {
           id: message.id,
-          threadId: message.threadId,
+          thread_id: message.threadId,
           subject,
           from,
           date,

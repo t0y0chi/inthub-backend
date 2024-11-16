@@ -1,6 +1,6 @@
 import { supabase } from '@/app/lib/supabase';
 import { EmailMetadata } from '@/app/types/email';
-import { createEmbedding } from './openai';
+import { createEmbedding } from '@/app/utils/openai';
 
 export async function saveEmails(emails: EmailMetadata[], userId: string) {
   try {
@@ -20,28 +20,47 @@ export async function saveEmails(emails: EmailMetadata[], userId: string) {
       return { count: 0 };
     }
 
-    // 各メールのembeddingを生成
-    const emailsWithEmbeddings = await Promise.all(
-      newEmails.map(async (email) => {
-        const content = `Subject: ${email.subject}\n\nFrom: ${email.from}\n\nBody: ${email.body}`;
-        const embedding = await createEmbedding(content);
-        return {
-          ...email,
-          user_id: userId,
-          embedding,
-        };
-      })
-    );
+    // バッチ処理用の配列
+    const batchSize = 100;
+    const batches = [];
+    
+    for (let i = 0; i < newEmails.length; i += batchSize) {
+      const batch = newEmails.slice(i, i + batchSize);
+      batches.push(batch);
+    }
 
-    // バッチ保存
-    const { error, count } = await supabase
-      .from('emails')
-      .insert(emailsWithEmbeddings)
-      .select('count');
+    let totalSaved = 0;
 
-    if (error) throw error;
+    // バッチ処理でembeddingを生成し保存
+    for (const batch of batches) {
+      const emailsWithEmbeddings = await Promise.all(
+        batch.map(async (email) => {
+          const content = `Subject: ${email.subject}\n\nFrom: ${email.from}\n\nBody: ${email.body}`;
+          const embedding = await createEmbedding(content);
+          return {
+            id: email.id,
+            user_id: userId,
+            thread_id: email.thread_id,
+            subject: email.subject,
+            from: email.from,
+            date: new Date(email.date).toISOString(),
+            body: email.body,
+            url: email.url,
+            embedding,
+          };
+        })
+      );
 
-    return { count: count || 0 };
+      const { error, data } = await supabase
+        .from('emails')
+        .insert(emailsWithEmbeddings)
+        .select('id');
+
+      if (error) throw error;
+      totalSaved += data?.length || 0;
+    }
+
+    return { count: totalSaved };
   } catch (error) {
     console.error('Error saving emails:', error);
     throw error;
