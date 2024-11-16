@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { searchSimilarEmails } from '@/app/utils/search';
 import { createChatCompletion } from '@/app/utils/openai';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req: req as any });
-    if (!token?.sub) {
+    const token = await getToken({ req });
+    if (!token?.userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -21,10 +21,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 関連メールを検索
-    const relevantEmails = await searchSimilarEmails(message, token.sub);
+    // ベクトル検索で関連メールを取得
+    const relevantEmails = await searchSimilarEmails(message, token.userId);
     
-    // コンテキストを作成
+    // 関連メールからコンテキストを作成
     const context = relevantEmails.map(email => `
 Email from: ${email.from}
 Subject: ${email.subject}

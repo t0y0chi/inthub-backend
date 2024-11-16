@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
-import { GmailClient, GmailMessage } from '@/app/types/gmail';
+import type { GmailClient } from '@/app/types/gmail';
 
 export async function getGmailClient(req: NextRequest): Promise<GmailClient> {
   const token = await getToken({ req });

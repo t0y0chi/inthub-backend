@@ -4,7 +4,6 @@ import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import { ChatMessage } from "./components/ChatMessage";
-import { SyncStatus } from './components/SyncStatus';
 import Link from 'next/link';
 
 type Message = {
