@@ -98,6 +98,8 @@ yarn dev
 - 🤖 **OpenAI API** - GPT-4 and text embeddings
 - 🔍 **Vector Search** - Semantic similarity search with pgvector
 
+<img width="621" alt="img" src="https://github.com/user-attachments/assets/13f0ad7c-729f-40d0-bb5c-7f5fa91222f3">
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
